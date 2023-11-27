@@ -12,14 +12,17 @@ const UserSchema = new Mongoose.Schema({
     required: true,
     trim: true,
   },
+  phone: {
+    type: String,
+    required: true,
+  },
   password: {
     type: String,
-    minlength: 6,
     required: true,
   },
   role: {
     type: String,
-    role: ["Admin", "visiter"],
+    role: ["Admin", "Employee", "HR"],
   },
 });
 
