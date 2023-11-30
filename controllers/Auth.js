@@ -10,6 +10,7 @@ require("dotenv").config();
 exports.signup = async (req, res) => {
   try {
     //get data
+
     const { username, email, phone, password, role } = req.body;
     //if user already exists
 
@@ -41,13 +42,13 @@ exports.signup = async (req, res) => {
       password: hashedPassword,
       role,
     });
-
+    // console.log(user);
     return res.status(200).json({
-      success: true,
+      success: user,
       message: "User registered successfully",
     });
   } catch (error) {
-    console.error(err);
+    // console.error(err);
     return res.status(500).json({
       success: false,
       message: "Error cannot be registered",
@@ -78,11 +79,11 @@ exports.login = async (req, res) => {
       });
     }
 
-    const payload = {
-      email: user.email,
-      id: user._id,
-      role: user.role,
-    };
+    // const payload = {
+    //   email: user.email,
+    //   id: user._id,
+    //   role: user.role,
+    // };
     //varify password and generate a JWT token
     if (await bcrypt.compare(password, user.password)) {
       //password match
@@ -95,14 +96,15 @@ exports.login = async (req, res) => {
           _id: user.id,
           role: user.role,
         },
-        "AdminAccess",
+        process.env.JWT_SECRET,
         {
           expiresIn: "1d",
         }
       );
-      console.log(user);
+      // console.log(user);
       const oldUser = { ...user, token };
-      console.log(oldUser);
+
+      // console.log(oldUser);
 
       user.password = undefined;
       console.log(user);
@@ -138,5 +140,91 @@ exports.login = async (req, res) => {
       success: false,
       message: error.message,
     });
+  }
+};
+
+exports.getAllUsers = async (req, res) => {
+  try {
+    const role = req.role;
+    let user;
+    if (role === "1") {
+      user = await User.find();
+    } else {
+      user = await User.find({
+        _id: req.userId,
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      user,
+      message: " ",
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.updateUser = async (req, res) => {
+  try {
+    const { userId, username, email, phone, role } = req.body;
+
+    const user_Id = req.userId;
+    const userRole = req.role;
+    if (user_Id !== userId && userRole !== "1") {
+      return res.status(404).json({ error: "You can not edit this user " });
+    }
+    // console.log(userId);
+    const updateUser = await User.findOne({ _id: userId });
+    // console.log(updateUser);
+    // console.log(userId);
+    if (!updateUser) {
+      return res.status(404).json({ error: "user not found " });
+    }
+
+    updateUser.username = username;
+    updateUser.email = email;
+    updateUser.phone = phone;
+    updateUser.role = role;
+
+    await updateUser.save();
+
+    res.json({ message: "user updated successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+exports.deleteUser = async (req, res) => {
+  try {
+    const { userId } = req.body;
+    console.log(userId, "userId");
+
+    // const user_Id = req.userId;
+    // // const userRole = req.role;
+    // console.log(user_Id, "user_Id");
+
+    // if (user_Id !== userId) {
+    //   return res
+    //     .status(403)
+    //     .json({ error: "You do not have permission to delete this user" });
+    // }
+
+    const deletedUser = await User.findOneAndDelete({ _id: userId });
+
+    if (!deletedUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({ message: "User deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
