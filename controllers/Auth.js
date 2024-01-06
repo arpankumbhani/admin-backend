@@ -1,5 +1,4 @@
 const bcrypt = require("bcryptjs");
-
 const User = require("../models/User");
 const { json } = require("express");
 const jwt = require("jsonwebtoken");
@@ -61,36 +60,23 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    //validation on email and password
     if (!email || !password) {
-      return res.status(400)({
+      return res.status(400).json({
         success: false,
-        message: "please Fill all the details carefully",
+        message: "Please fill in all the details carefully",
       });
     }
 
-    //check for the registered users
     let user = await User.findOne({ email });
-    //if not a registered user
+
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: "User is not a registered ",
+        message: "User is not registered",
       });
     }
 
-    // const payload = {
-    //   email: user.email,
-    //   id: user._id,
-    //   role: user.role,
-    // };
-    //varify password and generate a JWT token
     if (await bcrypt.compare(password, user.password)) {
-      //password match
-      // let token = jwt.sign(payload, process.env.JWT_SECRET, {
-      //   expiresIn: "2h",
-      // });
-
       const token = jwt.sign(
         {
           _id: user.id,
@@ -101,38 +87,27 @@ exports.login = async (req, res) => {
           expiresIn: "1d",
         }
       );
-      // console.log(user);
-      const oldUser = { ...user, token };
 
-      // console.log(oldUser);
+      // Send email upon successful login
+      const subject = "Successful Login";
+      const text = `Hello ${user.username},\n\nYou have successfully logged in.`;
 
+      // sendEmail(user.email, subject, text);
+
+      // Remove sensitive information before sending the response
       user.password = undefined;
-      console.log(user);
 
       res.status(200).json({
         success: true,
         token,
-        message: "user login successful ",
+        message: "User login successful",
       });
-      // const option = {
-      //   expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-      //   httpOnly: true,
-      // };
-      // res.cookie = ("token", token, option).status(200).json({
-      //   success: true,
-      //   token,
-      //   user,
-      //   message: "user login successful ",
-      // });
     } else {
-      // passworld not match
-      return (
-        res.status(403),
-        json({
-          success: false,
-          message: "Passworld not match , plase try Again ",
-        })
-      );
+      // Password not match
+      return res.status(403).json({
+        success: false,
+        message: "Password does not match, please try again",
+      });
     }
   } catch (error) {
     console.error(error);
@@ -142,6 +117,93 @@ exports.login = async (req, res) => {
     });
   }
 };
+
+// //login user
+// exports.login = async (req, res) => {
+//   try {
+//     const { email, password } = req.body;
+
+//     //validation on email and password
+//     if (!email || !password) {
+//       return res.status(400)({
+//         success: false,
+//         message: "please Fill all the details carefully",
+//       });
+//     }
+
+//     //check for the registered users
+//     let user = await User.findOne({ email });
+//     //if not a registered user
+//     if (!user) {
+//       return res.status(401).json({
+//         success: false,
+//         message: "User is not a registered ",
+//       });
+//     }
+
+//     // const payload = {
+//     //   email: user.email,
+//     //   id: user._id,
+//     //   role: user.role,
+//     // };
+//     //varify password and generate a JWT token
+//     if (await bcrypt.compare(password, user.password)) {
+//       //password match
+//       // let token = jwt.sign(payload, process.env.JWT_SECRET, {
+//       //   expiresIn: "2h",
+//       // });
+
+//       const token = jwt.sign(
+//         {
+//           _id: user.id,
+//           role: user.role,
+//         },
+//         process.env.JWT_SECRET,
+//         {
+//           expiresIn: "1d",
+//         }
+//       );
+//       // console.log(user);
+//       const oldUser = { ...user, token };
+
+//       // console.log(oldUser);
+
+//       user.password = undefined;
+//       // console.log(user);
+
+//       res.status(200).json({
+//         success: true,
+//         token,
+//         message: "user login successful ",
+//       });
+//       // const option = {
+//       //   expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+//       //   httpOnly: true,
+//       // };
+//       // res.cookie = ("token", token, option).status(200).json({
+//       //   success: true,
+//       //   token,
+//       //   user,
+//       //   message: "user login successful ",
+//       // });
+//     } else {
+//       // passworld not match
+//       return (
+//         res.status(403),
+//         json({
+//           success: false,
+//           message: "Passworld not match , plase try Again ",
+//         })
+//       );
+//     }
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
 
 exports.getAllUsers = async (req, res) => {
   try {
