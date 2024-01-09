@@ -266,7 +266,7 @@ exports.updateUser = async (req, res) => {
 exports.deleteUser = async (req, res) => {
   try {
     const { userId } = req.body;
-    console.log(userId, "userId");
+    // console.log(userId, "userId");
 
     // const user_Id = req.userId;
     // // const userRole = req.role;

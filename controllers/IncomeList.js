@@ -299,35 +299,6 @@ exports.getAllIncomeBetweenDates = async (req, res) => {
 
 /////////////////////////////////////////////////////////////////////////
 
-// exports.dueMailController = async (req, res) => {
-//   try {
-//     var today = new Date();
-//     today.setHours(0, 0, 0, 0);
-
-//     var yesterday = new Date(today);
-//     yesterday.setDate(today.getDate() - 1);
-
-//     const dueBillDate = await IncomeList.find({
-//       dueBilDate: {
-//         $lt: today,
-//         $gte: yesterday,
-//       },
-//     });
-
-//     return res.status(200).json({
-//       success: true,
-//       data: dueBillDate,
-//       message: "",
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     return res.status(500).json({
-//       success: false,
-//       message: "Error retrieving income details",
-//     });
-//   }
-// };
-
 exports.dueMailController = async (req, res) => {
   let dueBillDate;
 
@@ -337,7 +308,7 @@ exports.dueMailController = async (req, res) => {
     var yesterday = new Date(today);
     yesterday.setDate(today.getDate() - 1);
 
-    cron.schedule("34 19 * * *", async () => {
+    cron.schedule("03 18 * * *", async () => {
       console.log("---------------------");
       console.log("Running Cron Job");
       try {
@@ -351,33 +322,73 @@ exports.dueMailController = async (req, res) => {
 
         if (dueBillDate.length > 0) {
           const transporter = nodemailer.createTransport({
-            host: "sandbox.smtp.mailtrap.io",
-            port: 2525,
+            host: "smtp.gmail.com",
+            port: 587,
             auth: {
-              user: "5ba33f0633fe27",
-              pass: "a490fc1b032f45",
+              user: "smtpdev333@gmail.com",
+              pass: "gnamosaorsjykbrr",
             },
           });
-          const {
-            clientName,
-            amount,
-            dueAmount,
-            billDate,
-            dueBilDate,
-            datePicker,
-          } = dueBillDate;
+
+          const calculateTotals = () => {
+            let totalAmount = 0;
+            let totalDueAmount = 0;
+
+            dueBillDate.forEach((user) => {
+              totalAmount += parseInt(user.amount) || 0;
+              totalDueAmount += parseInt(user.dueAmount) || 0;
+            });
+
+            return { totalAmount, totalDueAmount };
+          };
+          const totals = calculateTotals();
+
           const htmlBody = `
-  <p><strong>Client Name:</strong> ${clientName}</p>
-  <p><strong>Amount:</strong> ${amount}</p>
-  <p><strong>Due Amount:</strong> ${dueAmount}</p>
-  <p><strong>Bill Date:</strong> ${billDate}</p>
-  <p><strong>Due Bill Date:</strong> ${dueBilDate}</p>
-  <p><strong>Date Picker:</strong> ${datePicker}</p>
+<table style="border-collapse: collapse; width: 100%;">
+<caption style="caption-side: top; font-size: 1.5em; font-weight: bold;">Billing Information</caption>
+  <thead>
+    <tr style="border: 1px solid #dddddd; text-align: left; padding: 8px;">
+      <th style="border: 1px solid #dddddd; padding: 8px;">Client Name</th>
+      <th style="border: 1px solid #dddddd; padding: 8px;">Amount</th>
+      <th style="border: 1px solid #dddddd; padding: 8px;">Due Amount</th>
+      <th style="border: 1px solid #dddddd; padding: 8px;">Bill Date</th>
+    </tr>
+  </thead>
+  <tbody>
+    ${dueBillDate
+      .map(
+        (user) =>
+          '<tr key="' +
+          user._id +
+          '" style="border: 1px solid #dddddd; text-align: left; padding: 8px;">' +
+          "<td style='border: 1px solid #dddddd; padding: 8px;'>" +
+          user.clientName +
+          "</td>" +
+          "<td style='border: 1px solid #dddddd; padding: 8px;'>" +
+          parseFloat(user.amount).toLocaleString() +
+          "</td>" +
+          "<td style='border: 1px solid #dddddd; padding: 8px;'>" +
+          parseFloat(user.dueAmount).toLocaleString() +
+          "</td>" +
+          "<td style='border: 1px solid #dddddd; padding: 8px;'>" +
+          new Date(user.billDate).toLocaleDateString("en-GB") +
+          "</td>" +
+          "</tr>"
+      )
+      .join("")}
+    <tr style="border: 1px solid #dddddd; text-align: left; padding: 8px;">
+      <td colspan="1" style="border: 1px solid #dddddd; padding: 8px; font-weight: bold;">Total</td>
+      <td style="border: 1px solid #dddddd; padding: 8px; font-weight: bold;">${totals.totalAmount.toLocaleString()}</td>
+      <td style="border: 1px solid #dddddd; padding: 8px; font-weight: bold;">${totals.totalDueAmount.toLocaleString()}</td>
+      <td colspan="1" style="border: 1px solid #dddddd; padding: 8px;"></td>
+    </tr>
+  </tbody>
+</table>
 `;
           const mailOptions = {
             from: "info@thelookagency.com",
-            // to: "darshak@thelookagency.in",
-            to: "arpank.tla@gmail.com",
+            to: "darshak@thelookagency.in",
+            // to: "arpank.tla@gmail.com",
             subject: "Payment Reminder",
             html: htmlBody,
           };
@@ -407,19 +418,36 @@ exports.dueMailController = async (req, res) => {
   }
 };
 
-// const transporter = nodemailer.createTransport({
-//   host: "smtp.gmail.com",
-//   port: 587,
-//   auth: {
-//     user: "smtpdev333@gmail.com",
-//     pass: "gnamosaorsjykbrr",
-//   },
-// });
+//  const transporter = nodemailer.createTransport({
+//    host: "sandbox.smtp.mailtrap.io",
+//    port: 2525,
+//    auth: {
+//      user: "5ba33f0633fe27",
+//      pass: "a490fc1b032f45",
+//    },
+//  });
+
+//  const mailOptions = {
+//    from: "<info@thelookagency.com>",
+//    // to: "darshak@thelookagency.in",
+//    to: "arpank.tla@gmail.com",
+//    subject: "Payment Reminder",
+//    html: htmlBody,
+//  };
+
+//  const transporter = nodemailer.createTransport({
+//    host: "smtp.gmail.com",
+//    port: 587,
+//    auth: {
+//      user: "smtpdev333@gmail.com",
+//      pass: "gnamosaorsjykbrr",
+//    },
+//  });
 
 // const mailOptions = {
 //   from: "info@thelookagency.com",
 //   // to: "darshak@thelookagency.in",
 //   to: "arpank.tla@gmail.com",
 //   subject: "Payment Reminder",
-//   text: "<p> </p>",
+//   html: htmlBody,
 // };
