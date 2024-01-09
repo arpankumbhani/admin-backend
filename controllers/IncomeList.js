@@ -59,7 +59,7 @@ exports.createIncomeAccount = async (req, res) => {
         clientName,
         amount,
         dueAmount,
-        bilDate,
+        billDate,
         dueBilDate,
         datePicker,
         accountName,
@@ -72,7 +72,7 @@ exports.createIncomeAccount = async (req, res) => {
       // console.log(clientName);
       // console.log(amount);
       // console.log(dueAmount);
-      // console.log(bilDate);
+      // console.log(billDate);
       // console.log(dueBilDate);
       // console.log(datePicker);
       // console.log(accountName);
@@ -81,7 +81,7 @@ exports.createIncomeAccount = async (req, res) => {
         clientName,
         amount,
         dueAmount,
-        bilDate,
+        billDate,
         dueBilDate,
         datePicker,
         accountName,
@@ -111,6 +111,8 @@ exports.createIncomeAccount = async (req, res) => {
 exports.getAllIncomeAccountList = async (req, res) => {
   try {
     user = await IncomeList.find();
+
+    // console.log(user);
 
     res.status(200).json({
       success: true,
@@ -191,7 +193,7 @@ exports.updateIncomeAccount = async (req, res) => {
       updatedAccount.clientName = rowClientName;
       updatedAccount.amount = rowAmount;
       updatedAccount.dueAmount = rowDueAmount;
-      updatedAccount.bilDate = rowBilDate;
+      updatedAccount.billDate = rowBilDate;
       updatedAccount.dueBilDate = rowDueBilDate;
       updatedAccount.datePicker = rowDatePicker;
       updatedAccount.accountName = rowAccountName;
@@ -328,22 +330,14 @@ exports.getAllIncomeBetweenDates = async (req, res) => {
 
 exports.dueMailController = async (req, res) => {
   let dueBillDate;
-  try {
-    // const today = new Date();
-    // const yesterday = new Date(today);
-    // yesterday.setDate(today.getDate() - 1);
-    // const yday = new Date(yesterday);
 
+  try {
     var today = new Date();
     today.setHours(0, 0, 0, 0);
     var yesterday = new Date(today);
     yesterday.setDate(today.getDate() - 1);
 
-    console.log(yesterday);
-    console.log(today);
-
-    // Schedule a cron job to check for due bills every day at a specific time (e.g., 1:00 PM)
-    cron.schedule("47 20 * * *", async () => {
+    cron.schedule("34 19 * * *", async () => {
       console.log("---------------------");
       console.log("Running Cron Job");
       try {
@@ -351,15 +345,11 @@ exports.dueMailController = async (req, res) => {
           dueBilDate: {
             $lt: today,
             $gte: yesterday,
-            // $eq: today,
           },
         });
         console.log(dueBillDate);
 
         if (dueBillDate.length > 0) {
-          // Send email logic goes here
-          // You can use nodemailer or any other library to send emails
-          // Example nodemailer usage:
           const transporter = nodemailer.createTransport({
             host: "sandbox.smtp.mailtrap.io",
             port: 2525,
@@ -368,12 +358,28 @@ exports.dueMailController = async (req, res) => {
               pass: "a490fc1b032f45",
             },
           });
-
+          const {
+            clientName,
+            amount,
+            dueAmount,
+            billDate,
+            dueBilDate,
+            datePicker,
+          } = dueBillDate;
+          const htmlBody = `
+  <p><strong>Client Name:</strong> ${clientName}</p>
+  <p><strong>Amount:</strong> ${amount}</p>
+  <p><strong>Due Amount:</strong> ${dueAmount}</p>
+  <p><strong>Bill Date:</strong> ${billDate}</p>
+  <p><strong>Due Bill Date:</strong> ${dueBilDate}</p>
+  <p><strong>Date Picker:</strong> ${datePicker}</p>
+`;
           const mailOptions = {
-            from: "<info@mailtrap.club>",
+            from: "info@thelookagency.com",
+            // to: "darshak@thelookagency.in",
             to: "arpank.tla@gmail.com",
             subject: "Payment Reminder",
-            text: "Please pay your amount.",
+            html: htmlBody,
           };
 
           await transporter.sendMail(mailOptions);
@@ -400,3 +406,20 @@ exports.dueMailController = async (req, res) => {
     });
   }
 };
+
+// const transporter = nodemailer.createTransport({
+//   host: "smtp.gmail.com",
+//   port: 587,
+//   auth: {
+//     user: "smtpdev333@gmail.com",
+//     pass: "gnamosaorsjykbrr",
+//   },
+// });
+
+// const mailOptions = {
+//   from: "info@thelookagency.com",
+//   // to: "darshak@thelookagency.in",
+//   to: "arpank.tla@gmail.com",
+//   subject: "Payment Reminder",
+//   text: "<p> </p>",
+// };

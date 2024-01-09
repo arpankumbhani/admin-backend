@@ -15,7 +15,7 @@ const IncomeListSchema = new Mongoose.Schema({
     type: String,
     required: true,
   },
-  bilDate: {
+  billDate: {
     type: Date,
     required: true,
   },
