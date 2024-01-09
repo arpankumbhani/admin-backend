@@ -325,8 +325,8 @@ exports.dueMailController = async (req, res) => {
             host: "smtp.gmail.com",
             port: 587,
             auth: {
-              user: "smtpdev333@gmail.com",
-              pass: "gnamosaorsjykbrr",
+              user: process.env.MAIL_USER,
+              pass: process.env.MAIL_PASS,
             },
           });
 
