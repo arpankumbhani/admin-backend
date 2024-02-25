@@ -7,7 +7,9 @@ require("dotenv").config();
 
 //middleware to parse json request body
 app.use(express.json());
-
+//connect to database
+const dbConnect = require("./config/database");
+dbConnect();
 //mount the todo  API routes
 app.use("/api/auth", require("./routes/user"));
 app.use("/api/balance", require("./routes/accountList"));
@@ -42,7 +44,3 @@ app.listen(port, (err, res) => {
     console.log("[INFO] Server Running on port:", port);
   }
 });
-
-//connect to database
-const dbConnect = require("./config/database");
-dbConnect();
