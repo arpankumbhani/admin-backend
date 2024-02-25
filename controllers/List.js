@@ -134,7 +134,7 @@ exports.updateAccount = async (req, res) => {
 exports.deleteAccount = async (req, res) => {
   try {
     const { AccountId } = req.body;
-    console.log(AccountId, "userId");
+    // console.log(AccountId, "userId");
 
     // const user_Id = req.userId;
     // // const userRole = req.role;

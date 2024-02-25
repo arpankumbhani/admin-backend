@@ -14,9 +14,11 @@ app.use("/api/balance", require("./routes/accountList"));
 app.use("/api/client", require("./routes/clientList"));
 app.use("/api/Expense", require("./routes/ExpenseList"));
 app.use("/api/Income", require("./routes/IncomeList"));
+app.use("/api/Product", require("./routes/ProductRoutes"));
 
 app.use("/uploads", express.static("uploads"));
 app.use("/contract", express.static("contract"));
+app.use("/products", express.static("products"));
 
 //start server
 

@@ -250,7 +250,8 @@ exports.deleteIncomeAccount = async (req, res) => {
   }
 };
 
-//////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+
 //Get Total Income FromDate to ToDate
 
 exports.getAllIncomeBetweenDates = async (req, res) => {
@@ -297,7 +298,7 @@ exports.getAllIncomeBetweenDates = async (req, res) => {
   }
 };
 
-/////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
 
 exports.dueMailController = async (req, res) => {
   let dueBillDate;
@@ -387,8 +388,8 @@ exports.dueMailController = async (req, res) => {
 `;
           const mailOptions = {
             from: "info@thelookagency.com",
-            to: "darshak@thelookagency.in",
-            // to: "arpank.tla@gmail.com",
+            // to: "darshak@thelookagency.in",
+            to: "arpank.tla@gmail.com",
             subject: "Payment Reminder",
             html: htmlBody,
           };
@@ -451,3 +452,145 @@ exports.dueMailController = async (req, res) => {
 //   subject: "Payment Reminder",
 //   html: htmlBody,
 // };
+
+///////////////////////////////////////////////////////////////////////////////////
+
+//Ledger
+
+exports.getAllLedgerClientName = async (req, res) => {
+  try {
+    const { fromDate, toDate, clientName } = req.body;
+
+    // console.log(fromDate);
+    // console.log(toDate);
+    const DataFromToDates = await IncomeList.find({
+      billDate: {
+        $gte: fromDate,
+        $lte: toDate,
+      },
+      clientName: {
+        $eq: clientName,
+      },
+    });
+    // console.log(DataFromToDates);
+
+    if (!DataFromToDates || DataFromToDates.length === 0) {
+      return res.status(404).json({ error: "Data not found" });
+    }
+
+    // const LedgerDetails
+    const user = DataFromToDates;
+
+    return res.status(200).json({
+      success: true,
+      message: "Data get successfully",
+      user,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "Error retrieving Client details",
+    });
+  }
+};
+
+///////////////////////////////////////////////////////////////////////////////////
+
+//send Report Mail
+
+exports.ledgerReportMail = async (req, res) => {
+  try {
+    const { sortedData } = req.body;
+
+    if (sortedData.length > 0) {
+      const transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 587,
+        auth: {
+          user: process.env.MAIL_USER,
+          pass: process.env.MAIL_PASS,
+        },
+      });
+
+      const calculateTotals = () => {
+        let totalAmount = 0;
+
+        sortedData.forEach((user) => {
+          totalAmount += parseInt(user.amount) || 0;
+        });
+
+        return { totalAmount };
+      };
+      const totals = calculateTotals();
+
+      const htmlBody = `
+<table style="border-collapse: collapse; width: 100%;">
+<caption style="caption-side: top; font-size: 1.5em; font-weight: bold;">Report</caption>
+  <thead>
+    <tr style="border: 1px solid #dddddd; text-align: left; padding: 8px;">
+      <th style="border: 1px solid #dddddd; padding: 8px;">Client Name</th>
+      <th style="border: 1px solid #dddddd; padding: 8px;">Bill Date</th>
+      <th style="border: 1px solid #dddddd; padding: 8px;">Receive Payment Account</th>
+      <th style="border: 1px solid #dddddd; padding: 8px;">	Amount</th>
+    </tr>
+  </thead>
+  <tbody>
+    ${sortedData
+      .map(
+        (user) =>
+          '<tr key="' +
+          user._id +
+          '" style="border: 1px solid #dddddd; text-align: left; padding: 8px;">' +
+          "<td style='border: 1px solid #dddddd; padding: 8px;'>" +
+          user.clientName +
+          "</td>" +
+          "<td style='border: 1px solid #dddddd; padding: 8px;'>" +
+          new Date(user.billDate).toLocaleDateString("en-GB") +
+          "</td>" +
+          "<td style='border: 1px solid #dddddd; padding: 8px;'>" +
+          user.accountName +
+          "</td>" +
+          "<td style='border: 1px solid #dddddd; padding: 8px;'>" +
+          parseFloat(user.amount).toLocaleString() +
+          "</td>" +
+          "</tr>"
+      )
+      .join("")}
+    <tr style="border: 1px solid #dddddd; text-align: left; padding: 8px;">
+      <td colspan="1" style="border: 1px solid #dddddd; padding: 8px; font-weight: bold;">Total</td>
+      <td colspan="1" style="border: 1px solid #dddddd; padding: 8px;"></td>
+      <td colspan="1" style="border: 1px solid #dddddd; padding: 8px;"></td>
+      <td style="border: 1px solid #dddddd; padding: 8px; font-weight: bold;">${totals.totalAmount.toLocaleString()}</td>
+    </tr>
+  </tbody>
+</table>
+`;
+      const mailOptions = {
+        from: "info@thelookagency.com",
+        to: "darshak@thelookagency.in",
+        // to: "arpank.tla@gmail.com",
+        subject: "Payment Reminder",
+        html: htmlBody,
+      };
+
+      await transporter.sendMail(mailOptions);
+
+      console.log("Email sent successfully.");
+    } else {
+      console.log("Reoirt Data not available");
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: sortedData,
+      message: "",
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Error retrieving income details",
+    });
+  }
+};

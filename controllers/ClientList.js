@@ -1,7 +1,7 @@
 const ClientList = require("../models/ClientList");
 const path = require("path");
 const multer = require("multer");
-const { log } = require("console");
+// const { log } = require("console");
 const fs = require("fs").promises; // Using the promises version for async/await
 
 // Multer configuration

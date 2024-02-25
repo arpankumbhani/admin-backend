@@ -9,6 +9,7 @@ const {
   updateUser,
   deleteUser,
 } = require("../controllers/Auth");
+
 const { verifyToken } = require("../middleware/authmiddleware");
 
 //define API router
