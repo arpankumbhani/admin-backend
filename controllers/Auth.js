@@ -9,19 +9,15 @@ require("dotenv").config();
 exports.signup = async (req, res) => {
   try {
     //get data
-
     const { username, email, phone, password, role } = req.body;
     //if user already exists
-
     const existingUser = await User.findOne({ email });
-
     if (existingUser) {
       return res.status(400).json({
         success: false,
         message: "User already exists",
       });
     }
-
     //secure password
     let hashedPassword;
     try {
@@ -29,10 +25,9 @@ exports.signup = async (req, res) => {
     } catch (err) {
       return res.status(500).json({
         success: false,
-        message: "Error i hashing password",
+        message: "Error hashing password",
       });
     }
-
     //create new user
     const user = await User.create({
       username,
@@ -59,14 +54,12 @@ exports.signup = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-
     if (!email || !password) {
       return res.status(400).json({
         success: false,
         message: "Please fill in all the details carefully",
       });
     }
-
     let user = await User.findOne({ email });
 
     if (!user) {
@@ -75,7 +68,6 @@ exports.login = async (req, res) => {
         message: "User is not registered",
       });
     }
-
     if (await bcrypt.compare(password, user.password)) {
       const token = jwt.sign(
         {
@@ -87,16 +79,8 @@ exports.login = async (req, res) => {
           expiresIn: "1d",
         }
       );
-
-      // Send email upon successful login
-      const subject = "Successful Login";
-      const text = `Hello ${user.username},\n\nYou have successfully logged in.`;
-
-      // sendEmail(user.email, subject, text);
-
       // Remove sensitive information before sending the response
       user.password = undefined;
-
       res.status(200).json({
         success: true,
         token,
